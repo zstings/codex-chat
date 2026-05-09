@@ -8,7 +8,9 @@
         class="search-input"
         @input="handleSearch"
       />
-      <button @click="refreshSessions" class="refresh-btn">🔄 刷新</button>
+      <button @click="refreshSessions" class="refresh-btn">
+        🔄 刷新
+      </button>
     </header>
 
     <div v-if="loading" class="loading-container">
@@ -25,6 +27,7 @@
         v-for="session in filteredSessions"
         :key="session.sessionId"
         class="session-item"
+        :class="{ selected: selectedSessionId === session.sessionId }"
         @click="selectSession(session)"
       >
         <div class="session-header">
@@ -42,19 +45,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { scanSessions, filterSessions } from "../api/sessions";
-import type { SessionListItem, FilterOptions } from "../types/session";
-import LoadingSpinner from "./LoadingSpinner.vue";
+import { ref, onMounted } from 'vue';
+import { scanSessions, filterSessions } from '../api/sessions';
+import type { SessionListItem, FilterOptions } from '../types/session';
+import LoadingSpinner from './LoadingSpinner.vue';
 
 const emit = defineEmits<{
-  (e: "select", session: SessionListItem): void;
+  (e: 'select', session: SessionListItem): void;
 }>();
 
 const sessions = ref<SessionListItem[]>([]);
 const filteredSessions = ref<SessionListItem[]>([]);
 const loading = ref(true);
-const searchKeyword = ref("");
+const searchKeyword = ref('');
+const selectedSessionId = ref<string | null>(null);
 
 async function refreshSessions() {
   loading.value = true;
@@ -62,7 +66,7 @@ async function refreshSessions() {
     sessions.value = await scanSessions();
     applyFilter();
   } catch (error) {
-    console.error("扫描会话失败:", error);
+    console.error('扫描会话失败:', error);
   } finally {
     loading.value = false;
   }
@@ -80,7 +84,8 @@ function applyFilter() {
 }
 
 function selectSession(session: SessionListItem) {
-  emit("select", session);
+  selectedSessionId.value = session.sessionId;
+  emit('select', session);
 }
 
 onMounted(() => {
@@ -175,8 +180,10 @@ onMounted(() => {
   border-color: #007acc;
 }
 
-.session-item:active {
-  transform: scale(0.98);
+.session-item.selected {
+  border-color: #007acc;
+  background: #e7f3ff;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
 }
 
 .session-header {
@@ -205,7 +212,7 @@ onMounted(() => {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  word-break: break-all;
+  word-break: break-word;
 }
 
 .session-footer {

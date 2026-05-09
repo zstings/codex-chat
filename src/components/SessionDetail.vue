@@ -3,7 +3,6 @@
     <header class="detail-header">
       <h2>会话详情</h2>
       <div class="actions">
-        <button @click="handleExport" class="btn-export">📥 导出</button>
         <button @click="handleDelete" class="btn-delete">🗑️ 删除</button>
       </div>
     </header>
@@ -48,7 +47,6 @@
 <script setup lang="ts">
 import type { Session } from '../types/session';
 import { deleteSession } from '../api/sessions';
-import { messagesToMarkdown } from '../utils/parser';
 
 const props = defineProps<{
   session: Session | null;
@@ -68,20 +66,6 @@ async function handleDelete() {
     emit('deleted', props.session.sessionId);
     emit('close');
   }
-}
-
-function handleExport() {
-  if (!props.session) return;
-
-  const markdown = messagesToMarkdown(props.session.messages, props.session);
-
-  const blob = new Blob([markdown], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `session-${props.session.sessionId.substring(0, 8)}.md`;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 </script>
 
@@ -111,29 +95,33 @@ function handleExport() {
   gap: 8px;
 }
 
-.btn-export,
 .btn-delete {
   padding: 8px 16px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-}
-
-.btn-export {
-  background: #f0f0f0;
-  color: #333;
-}
-
-.btn-delete {
   background: #dc3545;
   color: white;
+}
+
+.btn-delete:hover {
+  background: #c82333;
 }
 
 .content {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #999;
+  font-size: 14px;
 }
 
 .session-info {
