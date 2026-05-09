@@ -10,12 +10,12 @@ export default defineConfig({
   plugins: [
     vue(),
     vokexPlugin({
-      name: "Codex 会话管理器",
+      name: "Codex 会话管理器 v" + version,
       identifier: "com.codex.session-manager",
       version: version,
       icon: "icon/logo.png",
       window: {
-        title: "Codex 会话管理器",
+        title: "Codex 会话管理器 v" + version,
         width: 1200,
         height: 800,
         minWidth: 800,

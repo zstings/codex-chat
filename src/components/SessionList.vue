@@ -86,8 +86,17 @@ function selectSession(session: SessionListItem) {
   emit("select", session);
 }
 
+function clearSelection() {
+  selectedSessionId.value = null;
+}
+
 onMounted(() => {
   refreshSessions();
+});
+
+defineExpose({
+  refresh: refreshSessions,
+  clearSelection,
 });
 </script>
 

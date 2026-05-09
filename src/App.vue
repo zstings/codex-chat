@@ -8,7 +8,7 @@
     <main class="app-main">
       <aside class="sidebar">
         <div class="sidebar-content">
-          <SessionList @select="handleSessionSelect" />
+          <SessionList ref="sessionListRef" @select="handleSessionSelect" />
         </div>
       </aside>
 
@@ -30,6 +30,7 @@ import SessionDetail from "./components/SessionDetail.vue";
 import type { SessionListItem, Session } from "./types/session";
 import { loadSession } from "./api/sessions";
 
+const sessionListRef = ref<InstanceType<typeof SessionList> | null>(null);
 const selectedSession = ref<Session | null>(null);
 
 async function handleSessionSelect(sessionItem: SessionListItem) {
@@ -38,9 +39,14 @@ async function handleSessionSelect(sessionItem: SessionListItem) {
   selectedSession.value = session;
 }
 
-function handleSessionDeleted(sessionId: string) {
+async function handleSessionDeleted(sessionId: string) {
   console.log("会话已删除:", sessionId);
   selectedSession.value = null;
+  
+  if (sessionListRef.value) {
+    sessionListRef.value.clearSelection();
+    await sessionListRef.value.refresh();
+  }
 }
 
 function handleCloseDetail() {
