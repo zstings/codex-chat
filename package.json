@@ -1,18 +1,14 @@
 {
-  "name": "vue-project",
-  "version": "0.0.0",
+  "name": "codex-chat-manager",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "description": "Codex 会话管理器 - 管理和删除 Codex 聊天会话记录",
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "vite build",
     "preview": "vite preview",
-    "build-only": "vite build",
-    "type-check": "vue-tsc --build",
-    "lint": "run-s lint:*",
-    "lint:oxlint": "oxlint . --fix",
-    "lint:eslint": "eslint . --fix --cache",
-    "format": "oxfmt src/"
+    "type-check": "vue-tsc --build"
   },
   "dependencies": {
     "vue": "^3.5.32"
@@ -33,6 +29,7 @@
     "oxlint": "~1.60.0",
     "typescript": "~6.0.0",
     "vite": "^8.0.8",
+    "vokex.app": "^0.1.5",
     "vue-tsc": "^3.2.6"
   },
   "engines": {
