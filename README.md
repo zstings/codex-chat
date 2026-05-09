@@ -1,48 +1,107 @@
-# vue-project
+# Codex 会话管理器
 
-This template should help get you started developing with Vue 3 in Vite.
+一个轻量级的 Windows 桌面应用，用于管理和删除 Codex 的聊天会话记录。
 
-## Recommended IDE Setup
+## 功能特点
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- 🔍 **会话浏览** - 扫描并展示所有 Codex 会话
+- 🗑️ **会话删除** - 安全删除不需要的会话（Codex 官方缺失的功能）
+- 🔄 **会话搜索** - 按关键词快速搜索会话
+- 📅 **时间排序** - 按创建时间显示会话列表
+- 💬 **会话预览** - 快速查看会话内容摘要
 
-## Recommended Browser Setup
+## 技术栈
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- **前端框架**: Vue 3 + TypeScript
+- **构建工具**: Vite
+- **桌面框架**: Vokex (超轻量，基于 Rust WebView)
+- **样式**: 原生 CSS3
 
-## Type Support for `.vue` Imports in TS
+## 系统要求
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+- Windows 10/11
+- WebView2 运行时（Windows 11 已内置）
 
-## Customize configuration
+## 使用说明
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+### 首次使用
 
-## Project Setup
+1. 启动应用后，应用会自动扫描 Codex 会话目录
+   - 默认路径: `C:\Users\{用户名}\.codex\sessions`
+2. 会话列表按时间倒序排列，最新的会话在顶部
+3. 点击任意会话查看详情
 
-```sh
-npm install
+### 管理会话
+
+- **查看详情**: 点击会话卡片
+- **删除会话**: 在详情面板点击删除按钮
+- **搜索会话**: 在搜索框输入关键词
+- **刷新列表**: 点击刷新按钮
+
+### 删除确认
+
+删除会话时会弹出确认对话框，显示：
+
+- 会话 ID
+- 创建时间
+
+⚠️ **注意**: 删除操作不可撤销，请谨慎操作！
+
+## 应用界面
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ 🔷 Codex 会话管理器                                      │
+├──────────────────┬──────────────────────────────────────┤
+│  🔄 刷新         │  会话详情                             │
+│ ┌──────────────┐ │  会话 ID: xxx                        │
+│ │ 2026-05-07  │ │  创建时间: 2026-05-07T14:38:38       │
+│ │ 14:38:38    │ │  消息数: 12                          │
+│ │ 第一条消息.. │ │                                      │
+│ │ 12 条消息    │ │  👤 用户                             │
+│ └──────────────┘ │  你好，请帮我...                      │
+│ ┌──────────────┐ │                                      │
+│ │ 2026-05-06  │ │  🤖 助手                             │
+│ │ 10:15:30    │ │  你好！有什么...                      │
+│ │ 第二条消息.. │ │                                      │
+│ │ 8 条消息     │ │                      🗑️ 删除         │
+│ └──────────────┘ │                                      │
+└──────────────────┴──────────────────────────────────────┘
 ```
 
-### Compile and Hot-Reload for Development
+## 数据存储
 
-```sh
-npm run dev
+Codex 会话文件存储在：
+
+```
+C:\Users\{用户名}\.codex\sessions\
+  └── YYYY/
+      └── MM/
+          └── DD/
+              └── rollout-YYYY-MM-DDTHH-MM-SS-{会话ID}.jsonl
 ```
 
-### Type-Check, Compile and Minify for Production
+会话文件格式为 JSONL（JSON Lines）。
 
-```sh
-npm run build
-```
+## 常见问题
 
-### Lint with [ESLint](https://eslint.org/)
+### Q: 应用无法启动？
 
-```sh
-npm run lint
-```
+A: 确保已安装 WebView2 运行时。Windows 11 用户已内置，Windows 10 用户可能需要单独安装。
+
+### Q: 看不清会话列表？
+
+A: 会话预览可能因内容较长而显示省略号，点击会话可查看完整内容。
+
+### Q: 删除的会话可以恢复吗？
+
+A: 不可以，删除操作不可逆。建议定期备份重要会话。
+
+## License
+
+MIT
+
+## 致谢
+
+- [Vokex](https://github.com/zstings/vokex) - 超轻量级桌面应用框架
+- [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
