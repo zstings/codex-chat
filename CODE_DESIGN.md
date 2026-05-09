@@ -1,9 +1,11 @@
 # Codex 会话管理器 - 详细代码设计
 
 ## 项目概述
+
 基于 Vokex + Vue 3 的轻量级 Windows 桌面应用，用于管理和删除 Codex 聊天会话记录。
 
 ## 技术栈
+
 - **前端**: Vue 3 + TypeScript + Composition API
 - **构建**: Vite + vokexPlugin
 - **桌面**: Vokex (fs, dialog, menu API)
@@ -40,52 +42,52 @@ codex-chat/
 ```typescript
 // 单个会话元信息（从文件名解析）
 export interface SessionMeta {
-  sessionId: string;           // 会话 ID
-  filename: string;           // 完整文件名
-  fullPath: string;           // 绝对路径
-  dateTime: string;            // ISO 日期时间
-  date: string;               // 日期 YYYY-MM-DD
-  time: string;               // 时间 HH:MM:SS
-  year: string;               // 年份
-  month: string;              // 月份
-  day: string;                // 日期
+  sessionId: string // 会话 ID
+  filename: string // 完整文件名
+  fullPath: string // 绝对路径
+  dateTime: string // ISO 日期时间
+  date: string // 日期 YYYY-MM-DD
+  time: string // 时间 HH:MM:SS
+  year: string // 年份
+  month: string // 月份
+  day: string // 日期
 }
 
 // 单条消息（从 JSONL 解析）
 export interface CodexMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp?: string;
-  metadata?: Record<string, any>;
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  timestamp?: string
+  metadata?: Record<string, any>
 }
 
 // 完整会话数据
 export interface Session extends SessionMeta {
-  messages: CodexMessage[];
-  messageCount: number;        // 消息数量
-  preview?: string;            // 预览文本（第一条用户消息）
+  messages: CodexMessage[]
+  messageCount: number // 消息数量
+  preview?: string // 预览文本（第一条用户消息）
 }
 
 // 列表项（显示在列表中）
 export interface SessionListItem extends SessionMeta {
-  messageCount: number;
-  preview: string;
+  messageCount: number
+  preview: string
 }
 
 // 删除结果
 export interface DeleteResult {
-  success: boolean;
-  error?: string;
-  cancelled?: boolean;
+  success: boolean
+  error?: string
+  cancelled?: boolean
 }
 
 // 搜索/筛选选项
 export interface FilterOptions {
-  keyword?: string;           // 搜索关键词
-  startDate?: string;         // 开始日期
-  endDate?: string;           // 结束日期
-  sortBy?: 'date' | 'time' | 'size';  // 排序字段
-  sortOrder?: 'asc' | 'desc';         // 排序方向
+  keyword?: string // 搜索关键词
+  startDate?: string // 开始日期
+  endDate?: string // 结束日期
+  sortBy?: 'date' | 'time' | 'size' // 排序字段
+  sortOrder?: 'asc' | 'desc' // 排序方向
 }
 ```
 
@@ -94,9 +96,11 @@ export interface FilterOptions {
 ## 3. 解析工具 (utils/parser.ts)
 
 ### 3.1 文件名解析
+
 ```typescript
 // 文件名正则: rollout-YYYY-MM-DDTHH-MM-SS-{UUID}.jsonl
-const SESSION_REGEX = /^rollout-(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})-([a-f0-9-]+)\.jsonl$/i;
+const SESSION_REGEX =
+  /^rollout-(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})-([a-f0-9-]+)\.jsonl$/i
 
 /**
  * 解析会话文件名，提取元信息
@@ -105,14 +109,14 @@ const SESSION_REGEX = /^rollout-(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})-
  */
 export function parseSessionFilename(filePath: string): SessionMeta | null {
   // 提取文件名（处理 Windows/Unix 路径分隔符）
-  const filename = filePath.split(/[/\\]/).pop() || '';
-  const match = filename.match(SESSION_REGEX);
+  const filename = filePath.split(/[/\\]/).pop() || ''
+  const match = filename.match(SESSION_REGEX)
 
   if (!match) {
-    return null;
+    return null
   }
 
-  const [, year, month, day, hour, minute, second, sessionId] = match;
+  const [, year, month, day, hour, minute, second, sessionId] = match
 
   return {
     sessionId,
@@ -123,8 +127,8 @@ export function parseSessionFilename(filePath: string): SessionMeta | null {
     time: `${hour}:${minute}:${second}`,
     year,
     month,
-    day
-  };
+    day,
+  }
 }
 
 /**
@@ -132,25 +136,26 @@ export function parseSessionFilename(filePath: string): SessionMeta | null {
  */
 function extractPreview(messages: CodexMessage[]): string {
   // 查找第一条用户消息
-  const userMessage = messages.find(m => m.role === 'user');
+  const userMessage = messages.find((m) => m.role === 'user')
   if (userMessage) {
-    const content = userMessage.content;
+    const content = userMessage.content
     // 截取前 100 个字符
-    return content.length > 100 ? content.substring(0, 100) + '...' : content;
+    return content.length > 100 ? content.substring(0, 100) + '...' : content
   }
 
   // 如果没有用户消息，显示第一条助手消息
-  const assistantMessage = messages.find(m => m.role === 'assistant');
+  const assistantMessage = messages.find((m) => m.role === 'assistant')
   if (assistantMessage) {
-    const content = assistantMessage.content;
-    return content.length > 100 ? content.substring(0, 100) + '...' : content;
+    const content = assistantMessage.content
+    return content.length > 100 ? content.substring(0, 100) + '...' : content
   }
 
-  return '（空会话）';
+  return '（空会话）'
 }
 ```
 
 ### 3.2 JSONL 解析
+
 ```typescript
 /**
  * 解析 JSONL 文件内容
@@ -158,28 +163,28 @@ function extractPreview(messages: CodexMessage[]): string {
  * @returns 消息数组
  */
 export function parseJsonlFile(content: string): CodexMessage[] {
-  const messages: CodexMessage[] = [];
-  const lines = content.split('\n');
+  const messages: CodexMessage[] = []
+  const lines = content.split('\n')
 
   for (const line of lines) {
-    const trimmed = line.trim();
+    const trimmed = line.trim()
     if (!trimmed) {
-      continue; // 跳过空行
+      continue // 跳过空行
     }
 
     try {
-      const message = JSON.parse(trimmed) as CodexMessage;
+      const message = JSON.parse(trimmed) as CodexMessage
       // 验证必需字段
       if (message.role && message.content !== undefined) {
-        messages.push(message);
+        messages.push(message)
       }
     } catch (error) {
-      console.warn('JSON 解析失败:', trimmed.substring(0, 50));
+      console.warn('JSON 解析失败:', trimmed.substring(0, 50))
       // 不中断，继续处理下一行
     }
   }
 
-  return messages;
+  return messages
 }
 
 /**
@@ -188,33 +193,30 @@ export function parseJsonlFile(content: string): CodexMessage[] {
  * @param sessionInfo - 会话基本信息
  * @returns Markdown 格式的字符串
  */
-export function messagesToMarkdown(
-  messages: CodexMessage[],
-  sessionInfo: SessionMeta
-): string {
-  const lines: string[] = [];
+export function messagesToMarkdown(messages: CodexMessage[], sessionInfo: SessionMeta): string {
+  const lines: string[] = []
 
-  lines.push(`# Codex 会话`);
-  lines.push(`- **会话 ID**: ${sessionInfo.sessionId}`);
-  lines.push(`- **创建时间**: ${sessionInfo.dateTime}`);
-  lines.push('');
-  lines.push('---');
-  lines.push('');
+  lines.push(`# Codex 会话`)
+  lines.push(`- **会话 ID**: ${sessionInfo.sessionId}`)
+  lines.push(`- **创建时间**: ${sessionInfo.dateTime}`)
+  lines.push('')
+  lines.push('---')
+  lines.push('')
 
   for (const msg of messages) {
-    const roleLabel = msg.role === 'user' ? '👤 用户' :
-                      msg.role === 'assistant' ? '🤖 助手' : '⚙️ 系统';
-    const timestamp = msg.timestamp ? `(${msg.timestamp})` : '';
+    const roleLabel =
+      msg.role === 'user' ? '👤 用户' : msg.role === 'assistant' ? '🤖 助手' : '⚙️ 系统'
+    const timestamp = msg.timestamp ? `(${msg.timestamp})` : ''
 
-    lines.push(`## ${roleLabel} ${timestamp}`);
-    lines.push('');
-    lines.push(msg.content);
-    lines.push('');
-    lines.push('---');
-    lines.push('');
+    lines.push(`## ${roleLabel} ${timestamp}`)
+    lines.push('')
+    lines.push(msg.content)
+    lines.push('')
+    lines.push('---')
+    lines.push('')
   }
 
-  return lines.join('\n');
+  return lines.join('\n')
 }
 ```
 
@@ -223,63 +225,57 @@ export function messagesToMarkdown(
 ## 4. API 封装 (api/sessions.ts)
 
 ```typescript
-import { fs, app, dialog } from 'vokex.app';
-import {
-  parseSessionFilename,
-  parseJsonlFile,
-  messagesToMarkdown
-} from '../utils/parser';
+import { fs, app, dialog } from 'vokex.app'
+import { parseSessionFilename, parseJsonlFile, messagesToMarkdown } from '../utils/parser'
 import type {
   SessionMeta,
   Session,
   SessionListItem,
   DeleteResult,
-  FilterOptions
-} from '../types/session';
+  FilterOptions,
+} from '../types/session'
 
-const SESSIONS_FOLDER = '.codex/sessions';
+const SESSIONS_FOLDER = '.codex/sessions'
 
 /**
  * 获取会话目录路径
  */
 async function getSessionsPath(): Promise<string> {
-  const home = await app.getPath('home');
-  return `${home}/${SESSIONS_FOLDER}`;
+  const home = await app.getPath('home')
+  return `${home}/${SESSIONS_FOLDER}`
 }
 
 /**
  * 扫描所有会话文件
  */
 export async function scanSessions(): Promise<SessionListItem[]> {
-  const sessionsPath = await getSessionsPath();
+  const sessionsPath = await getSessionsPath()
 
   // 使用 glob 递归搜索所有 JSONL 文件
   const files = await fs.glob({
     pattern: '**/*.jsonl',
     cwd: sessionsPath,
-    absolute: true
-  });
+    absolute: true,
+  })
 
   // 解析每个文件名
-  const sessions: SessionListItem[] = [];
+  const sessions: SessionListItem[] = []
 
   for (const filePath of files) {
-    const meta = parseSessionFilename(filePath);
+    const meta = parseSessionFilename(filePath)
     if (meta) {
       sessions.push({
         ...meta,
-        messageCount: 0,      // 列表中暂不加载
-        preview: ''           // 列表中暂不加载
-      });
+        messageCount: 0, // 列表中暂不加载
+        preview: '', // 列表中暂不加载
+      })
     }
   }
 
   // 按时间倒序排序（最新的在前）
-  sessions.sort((a, b) =>
-    new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime()
-  );
+  sessions.sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())
 
-  return sessions;
+  return sessions
 }
 
 /**
@@ -287,26 +283,26 @@ export async function scanSessions(): Promise<SessionListItem[]> {
  */
 export async function loadSession(filePath: string): Promise<Session | null> {
   try {
-    const content = await fs.readFile(filePath);
-    const messages = parseJsonlFile(content);
-    const meta = parseSessionFilename(filePath);
+    const content = await fs.readFile(filePath)
+    const messages = parseJsonlFile(content)
+    const meta = parseSessionFilename(filePath)
 
     if (!meta) {
-      return null;
+      return null
     }
 
     // 提取预览文本
-    const preview = extractPreview(messages);
+    const preview = extractPreview(messages)
 
     return {
       ...meta,
       messages,
       messageCount: messages.length,
-      preview
-    };
+      preview,
+    }
   } catch (error) {
-    console.error('加载会话失败:', error);
-    return null;
+    console.error('加载会话失败:', error)
+    return null
   }
 }
 
@@ -321,24 +317,24 @@ export async function deleteSession(session: SessionMeta): Promise<DeleteResult>
     message: `确定要删除这个会话吗？`,
     detail: `会话 ID: ${session.sessionId}\n创建时间: ${session.dateTime}\n\n此操作不可撤销！`,
     buttons: ['取消', '确定删除'],
-    defaultId: 0,      // 默认选中"取消"
-    cancelId: 0        // ESC 键取消
-  });
+    defaultId: 0, // 默认选中"取消"
+    cancelId: 0, // ESC 键取消
+  })
 
   // 用户取消
   if (result.response === 0) {
-    return { success: false, cancelled: true };
+    return { success: false, cancelled: true }
   }
 
   // 执行删除
   try {
-    await fs.deleteFile(session.fullPath);
-    return { success: true };
+    await fs.deleteFile(session.fullPath)
+    return { success: true }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : '删除失败'
-    };
+      error: error instanceof Error ? error.message : '删除失败',
+    }
   }
 }
 
@@ -346,30 +342,28 @@ export async function deleteSession(session: SessionMeta): Promise<DeleteResult>
  * 批量删除会话
  */
 export async function deleteSessions(
-  sessions: SessionMeta[]
+  sessions: SessionMeta[],
 ): Promise<{ success: string[]; failed: { path: string; error: string }[] }> {
-  const success: string[] = [];
-  const failed: { path: string; error: string }[] = [];
+  const success: string[] = []
+  const failed: { path: string; error: string }[] = []
 
   for (const session of sessions) {
-    const result = await deleteSession(session);
+    const result = await deleteSession(session)
     if (result.success) {
-      success.push(session.sessionId);
+      success.push(session.sessionId)
     } else if (result.error) {
-      failed.push({ path: session.fullPath, error: result.error });
+      failed.push({ path: session.fullPath, error: result.error })
     }
   }
 
-  return { success, failed };
+  return { success, failed }
 }
 
 /**
  * 导出会话为 Markdown
  */
-export async function exportSessionAsMarkdown(
-  session: Session
-): Promise<string> {
-  return messagesToMarkdown(session.messages, session);
+export async function exportSessionAsMarkdown(session: Session): Promise<string> {
+  return messagesToMarkdown(session.messages, session)
 }
 
 /**
@@ -377,48 +371,49 @@ export async function exportSessionAsMarkdown(
  */
 export function filterSessions(
   sessions: SessionListItem[],
-  options: FilterOptions
+  options: FilterOptions,
 ): SessionListItem[] {
-  let filtered = [...sessions];
+  let filtered = [...sessions]
 
   // 关键词搜索
   if (options.keyword) {
-    const keyword = options.keyword.toLowerCase();
-    filtered = filtered.filter(s =>
-      s.sessionId.toLowerCase().includes(keyword) ||
-      s.date.includes(keyword) ||
-      s.preview.toLowerCase().includes(keyword)
-    );
+    const keyword = options.keyword.toLowerCase()
+    filtered = filtered.filter(
+      (s) =>
+        s.sessionId.toLowerCase().includes(keyword) ||
+        s.date.includes(keyword) ||
+        s.preview.toLowerCase().includes(keyword),
+    )
   }
 
   // 日期范围筛选
   if (options.startDate) {
-    filtered = filtered.filter(s => s.date >= options.startDate!);
+    filtered = filtered.filter((s) => s.date >= options.startDate!)
   }
   if (options.endDate) {
-    filtered = filtered.filter(s => s.date <= options.endDate!);
+    filtered = filtered.filter((s) => s.date <= options.endDate!)
   }
 
   // 排序
   if (options.sortBy) {
     filtered.sort((a, b) => {
-      let comparison = 0;
+      let comparison = 0
 
       switch (options.sortBy) {
         case 'date':
         case 'time':
-          comparison = new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime();
-          break;
+          comparison = new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
+          break
         case 'size':
-          comparison = a.sessionId.localeCompare(b.sessionId);
-          break;
+          comparison = a.sessionId.localeCompare(b.sessionId)
+          break
       }
 
-      return options.sortOrder === 'desc' ? -comparison : comparison;
-    });
+      return options.sortOrder === 'desc' ? -comparison : comparison
+    })
   }
 
-  return filtered;
+  return filtered
 }
 ```
 
@@ -427,6 +422,7 @@ export function filterSessions(
 ## 5. Vue 组件设计
 
 ### 5.1 SessionList.vue（会话列表）
+
 ```vue
 <template>
   <div class="session-list">
@@ -438,9 +434,7 @@ export function filterSessions(
         class="search-input"
         @input="handleSearch"
       />
-      <button @click="refreshSessions" class="refresh-btn">
-        🔄 刷新
-      </button>
+      <button @click="refreshSessions" class="refresh-btn">🔄 刷新</button>
     </header>
 
     <div v-if="loading" class="loading-container">
@@ -471,50 +465,50 @@ export function filterSessions(
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { scanSessions, filterSessions } from '../api/sessions';
-import type { SessionListItem, FilterOptions } from '../types/session';
-import LoadingSpinner from './LoadingSpinner.vue';
+import { ref, computed, onMounted } from 'vue'
+import { scanSessions, filterSessions } from '../api/sessions'
+import type { SessionListItem, FilterOptions } from '../types/session'
+import LoadingSpinner from './LoadingSpinner.vue'
 
 const emit = defineEmits<{
-  (e: 'select', session: SessionListItem): void;
-}>();
+  (e: 'select', session: SessionListItem): void
+}>()
 
-const sessions = ref<SessionListItem[]>([]);
-const filteredSessions = ref<SessionListItem[]>([]);
-const loading = ref(true);
-const searchKeyword = ref('');
+const sessions = ref<SessionListItem[]>([])
+const filteredSessions = ref<SessionListItem[]>([])
+const loading = ref(true)
+const searchKeyword = ref('')
 
 async function refreshSessions() {
-  loading.value = true;
+  loading.value = true
   try {
-    sessions.value = await scanSessions();
-    applyFilter();
+    sessions.value = await scanSessions()
+    applyFilter()
   } catch (error) {
-    console.error('扫描会话失败:', error);
+    console.error('扫描会话失败:', error)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function handleSearch() {
-  applyFilter();
+  applyFilter()
 }
 
 function applyFilter() {
   const options: FilterOptions = {
-    keyword: searchKeyword.value || undefined
-  };
-  filteredSessions.value = filterSessions(sessions.value, options);
+    keyword: searchKeyword.value || undefined,
+  }
+  filteredSessions.value = filterSessions(sessions.value, options)
 }
 
 function selectSession(session: SessionListItem) {
-  emit('select', session);
+  emit('select', session)
 }
 
 onMounted(() => {
-  refreshSessions();
-});
+  refreshSessions()
+})
 </script>
 
 <style scoped>
@@ -542,7 +536,7 @@ onMounted(() => {
 
 .refresh-btn {
   padding: 8px 16px;
-  background: #007acc;
+  background: #3326fb;
   color: white;
   border: none;
   border-radius: 4px;
@@ -593,6 +587,7 @@ onMounted(() => {
 ```
 
 ### 5.2 SessionDetail.vue（会话详情）
+
 ```vue
 <template>
   <div class="session-detail">
@@ -642,66 +637,66 @@ onMounted(() => {
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import type { Session } from '../types/session';
-import { deleteSession } from '../api/sessions';
+import { computed } from 'vue'
+import type { Session } from '../types/session'
+import { deleteSession } from '../api/sessions'
 
 const props = defineProps<{
-  session: Session | null;
-}>();
+  session: Session | null
+}>()
 
 const emit = defineEmits<{
-  (e: 'deleted', sessionId: string): void;
-  (e: 'close'): void;
-}>();
+  (e: 'deleted', sessionId: string): void
+  (e: 'close'): void
+}>()
 
 async function handleDelete() {
-  if (!props.session) return;
+  if (!props.session) return
 
-  const result = await deleteSession(props.session);
+  const result = await deleteSession(props.session)
 
   if (result.success) {
-    emit('deleted', props.session.sessionId);
-    emit('close');
+    emit('deleted', props.session.sessionId)
+    emit('close')
   }
 }
 
 function handleExport() {
-  if (!props.session) return;
+  if (!props.session) return
 
   // 生成 Markdown 内容
-  const markdown = generateMarkdown(props.session);
+  const markdown = generateMarkdown(props.session)
 
   // 创建下载
-  const blob = new Blob([markdown], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `session-${props.session.sessionId.substring(0, 8)}.md`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const blob = new Blob([markdown], { type: 'text/markdown' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `session-${props.session.sessionId.substring(0, 8)}.md`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 function generateMarkdown(session: Session): string {
-  const lines: string[] = [];
-  lines.push(`# Codex 会话`);
-  lines.push(`- **会话 ID**: ${session.sessionId}`);
-  lines.push(`- **创建时间**: ${session.dateTime}`);
-  lines.push('');
-  lines.push('---');
-  lines.push('');
+  const lines: string[] = []
+  lines.push(`# Codex 会话`)
+  lines.push(`- **会话 ID**: ${session.sessionId}`)
+  lines.push(`- **创建时间**: ${session.dateTime}`)
+  lines.push('')
+  lines.push('---')
+  lines.push('')
 
   for (const msg of session.messages) {
-    const roleLabel = msg.role === 'user' ? '👤 用户' : '🤖 助手';
-    lines.push(`## ${roleLabel}`);
-    lines.push('');
-    lines.push(msg.content);
-    lines.push('');
-    lines.push('---');
-    lines.push('');
+    const roleLabel = msg.role === 'user' ? '👤 用户' : '🤖 助手'
+    lines.push(`## ${roleLabel}`)
+    lines.push('')
+    lines.push(msg.content)
+    lines.push('')
+    lines.push('---')
+    lines.push('')
   }
 
-  return lines.join('\n');
+  return lines.join('\n')
 }
 </script>
 
@@ -829,7 +824,7 @@ function generateMarkdown(session: Session): string {
 <template>
   <div class="app">
     <header class="app-header">
-      <h1>🔷 Codex 会话管理器</h1>
+      <h1>Codex 会话管理器</h1>
     </header>
 
     <main class="app-main">
@@ -849,27 +844,27 @@ function generateMarkdown(session: Session): string {
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import SessionList from './components/SessionList.vue';
-import SessionDetail from './components/SessionDetail.vue';
-import type { SessionListItem, Session } from './types/session';
-import { loadSession } from './api/sessions';
+import { ref } from 'vue'
+import SessionList from './components/SessionList.vue'
+import SessionDetail from './components/SessionDetail.vue'
+import type { SessionListItem, Session } from './types/session'
+import { loadSession } from './api/sessions'
 
-const selectedSession = ref<Session | null>(null);
+const selectedSession = ref<Session | null>(null)
 
 async function handleSessionSelect(sessionItem: SessionListItem) {
   // 加载完整会话内容
-  const session = await loadSession(sessionItem.fullPath);
-  selectedSession.value = session;
+  const session = await loadSession(sessionItem.fullPath)
+  selectedSession.value = session
 }
 
 function handleSessionDeleted(sessionId: string) {
-  console.log('会话已删除:', sessionId);
-  selectedSession.value = null;
+  console.log('会话已删除:', sessionId)
+  selectedSession.value = null
 }
 
 function handleCloseDetail() {
-  selectedSession.value = null;
+  selectedSession.value = null
 }
 </script>
 
@@ -881,8 +876,8 @@ function handleCloseDetail() {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .app {
@@ -893,7 +888,7 @@ body {
 
 .app-header {
   padding: 16px 24px;
-  background: #007acc;
+  background: #3326fb;
   color: white;
 }
 
@@ -926,9 +921,9 @@ body {
 ## 7. Vite 配置 (vite.config.ts)
 
 ```typescript
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { vokexPlugin } from 'vokex.app/vite-plugin';
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { vokexPlugin } from 'vokex.app/vite-plugin'
 
 export default defineConfig({
   plugins: [
@@ -943,17 +938,17 @@ export default defineConfig({
         width: 1200,
         height: 800,
         minWidth: 800,
-        minHeight: 600
+        minHeight: 600,
       },
-      devtools: process.env.NODE_ENV === 'development'
-    })
+      devtools: process.env.NODE_ENV === 'development',
+    }),
   ],
   resolve: {
     alias: {
-      '@': '/src'
-    }
-  }
-});
+      '@': '/src',
+    },
+  },
+})
 ```
 
 ---
@@ -961,11 +956,11 @@ export default defineConfig({
 ## 8. 主入口 (main.ts)
 
 ```typescript
-import { createApp } from 'vue';
-import App from './App.vue';
+import { createApp } from 'vue'
+import App from './App.vue'
 
-const app = createApp(App);
-app.mount('#app');
+const app = createApp(App)
+app.mount('#app')
 ```
 
 ---
@@ -975,15 +970,15 @@ app.mount('#app');
 ```html
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Codex 会话管理器</title>
-</head>
-<body>
-  <div id="app"></div>
-  <script type="module" src="/src/main.ts"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex 会话管理器</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
 ```
 
@@ -1019,6 +1014,7 @@ app.mount('#app');
 ## 11. 核心流程图
 
 ### 11.1 扫描会话流程
+
 ```
 应用启动
   ↓
@@ -1032,6 +1028,7 @@ app.mount('#app');
 ```
 
 ### 11.2 查看会话流程
+
 ```
 用户点击会话
   ↓
@@ -1045,6 +1042,7 @@ app.mount('#app');
 ```
 
 ### 11.3 删除会话流程
+
 ```
 用户点击删除
   ↓
@@ -1064,16 +1062,19 @@ app.mount('#app');
 ## 12. 性能优化建议
 
 ### 12.1 列表优化
+
 - **懒加载详情**: 列表只显示元信息，点击时才加载完整内容
 - **虚拟滚动**: 如果会话超过 1000 个，使用虚拟滚动库
 - **缓存**: 缓存已加载的会话内容
 
 ### 12.2 文件操作优化
+
 - **异步扫描**: 使用 `fs.glob()` 一次性获取所有文件
 - **分页加载**: 大型 JSONL 文件分页读取
 - **限制预览**: 只显示前 100 条消息
 
 ### 12.3 UI 优化
+
 - **骨架屏**: 加载时显示骨架屏而非 spinner
 - **防抖**: 搜索输入防抖 300ms
 - **键盘快捷键**: `Del` 删除、`Esc` 关闭详情
@@ -1083,12 +1084,14 @@ app.mount('#app');
 ## 13. 后续扩展功能
 
 ### Phase 2 计划
+
 - [ ] 批量选择和删除
 - [ ] 日期范围筛选
 - [ ] 按消息内容搜索
 - [ ] 导出为 PDF
 
 ### Phase 3 计划
+
 - [ ] 会话分组（按日期）
 - [ ] 收藏/标记功能
 - [ ] 深色模式

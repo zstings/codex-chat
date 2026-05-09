@@ -3,7 +3,7 @@
     <header class="detail-header">
       <h2>会话详情</h2>
       <div class="actions">
-        <button @click="handleDelete" class="btn-delete">🗑️ 删除</button>
+        <button @click="handleDelete" class="btn-delete">删除</button>
       </div>
     </header>
 
@@ -35,7 +35,7 @@
           :class="message.role"
         >
           <div class="message-role">
-            {{ message.role === 'user' ? '👤 用户' : '🤖 助手' }}
+            {{ message.role === "user" ? "👤 用户" : "🤖 助手" }}
           </div>
           <div class="message-content">{{ message.content }}</div>
         </div>
@@ -45,16 +45,16 @@
 </template>
 
 <script setup lang="ts">
-import type { Session } from '../types/session';
-import { deleteSession } from '../api/sessions';
+import type { Session } from "../types/session";
+import { deleteSession } from "../api/sessions";
 
 const props = defineProps<{
   session: Session | null;
 }>();
 
 const emit = defineEmits<{
-  (e: 'deleted', sessionId: string): void;
-  (e: 'close'): void;
+  (e: "deleted", sessionId: string): void;
+  (e: "close"): void;
 }>();
 
 async function handleDelete() {
@@ -63,8 +63,8 @@ async function handleDelete() {
   const result = await deleteSession(props.session);
 
   if (result.success) {
-    emit('deleted', props.session.sessionId);
-    emit('close');
+    emit("deleted", props.session.sessionId);
+    emit("close");
   }
 }
 </script>
@@ -164,7 +164,7 @@ async function handleDelete() {
 }
 
 .message.user {
-  background: #e3f2fd;
+  background: #3326fb1f;
   margin-left: 20%;
 }
 

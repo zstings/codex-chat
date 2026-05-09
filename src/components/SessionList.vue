@@ -8,9 +8,7 @@
         class="search-input"
         @input="handleSearch"
       />
-      <button @click="refreshSessions" class="refresh-btn">
-        🔄 刷新
-      </button>
+      <button @click="refreshSessions" class="refresh-btn">刷新</button>
     </header>
 
     <div v-if="loading" class="loading-container">
@@ -45,19 +43,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { scanSessions, filterSessions } from '../api/sessions';
-import type { SessionListItem, FilterOptions } from '../types/session';
-import LoadingSpinner from './LoadingSpinner.vue';
+import { ref, onMounted } from "vue";
+import { scanSessions, filterSessions } from "../api/sessions";
+import type { SessionListItem, FilterOptions } from "../types/session";
+import LoadingSpinner from "./LoadingSpinner.vue";
 
 const emit = defineEmits<{
-  (e: 'select', session: SessionListItem): void;
+  (e: "select", session: SessionListItem): void;
 }>();
 
 const sessions = ref<SessionListItem[]>([]);
 const filteredSessions = ref<SessionListItem[]>([]);
 const loading = ref(true);
-const searchKeyword = ref('');
+const searchKeyword = ref("");
 const selectedSessionId = ref<string | null>(null);
 
 async function refreshSessions() {
@@ -66,7 +64,7 @@ async function refreshSessions() {
     sessions.value = await scanSessions();
     applyFilter();
   } catch (error) {
-    console.error('扫描会话失败:', error);
+    console.error("扫描会话失败:", error);
   } finally {
     loading.value = false;
   }
@@ -85,7 +83,7 @@ function applyFilter() {
 
 function selectSession(session: SessionListItem) {
   selectedSessionId.value = session.sessionId;
-  emit('select', session);
+  emit("select", session);
 }
 
 onMounted(() => {
@@ -122,12 +120,12 @@ onMounted(() => {
 
 .search-input:focus {
   outline: none;
-  border-color: #007acc;
+  border-color: #3326fb;
 }
 
 .refresh-btn {
   padding: 8px 16px;
-  background: #007acc;
+  background: #3326fb;
   color: white;
   border: none;
   border-radius: 4px;
@@ -177,11 +175,11 @@ onMounted(() => {
 
 .session-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-color: #007acc;
+  border-color: #3326fb;
 }
 
 .session-item.selected {
-  border-color: #007acc;
+  border-color: #3326fb;
   background: #e7f3ff;
   box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
 }
@@ -225,7 +223,7 @@ onMounted(() => {
 
 .message-count {
   font-size: 12px;
-  color: #007acc;
+  color: #3326fb;
   font-weight: 500;
 }
 

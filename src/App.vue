@@ -1,7 +1,8 @@
 <template>
   <div class="app">
     <header class="app-header">
-      <h1>🔷 Codex 会话管理器</h1>
+      <img src="/icon/logo.png" alt="" />
+      <h1>Codex 会话管理器</h1>
     </header>
 
     <main class="app-main">
@@ -76,9 +77,16 @@ body {
 
 .app-header {
   padding: 16px 24px;
-  background: #007acc;
+  background: #1f1f1f;
   color: white;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.app-header img {
+  width: 40px;
+  margin-right: 12px;
 }
 
 .app-header h1 {

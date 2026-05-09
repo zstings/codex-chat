@@ -13,7 +13,7 @@ export default defineConfig({
       name: "Codex 会话管理器",
       identifier: "com.codex.session-manager",
       version: version,
-      icon: "public/icon.ico",
+      icon: "icon/logo.png",
       window: {
         title: "Codex 会话管理器",
         width: 1200,
