@@ -33,7 +33,11 @@
           <span class="session-date">{{ session.date }}</span>
           <span class="session-time">{{ session.time }}</span>
         </div>
-        <div class="session-id">ID: {{ session.sessionId.substring(0, 16) }}...</div>
+        <div class="session-preview">{{ session.preview }}</div>
+        <div class="session-footer">
+          <span class="message-count">{{ session.messageCount }} 条消息</span>
+          <span class="session-id">{{ session.sessionId.substring(0, 8) }}...</span>
+        </div>
       </div>
     </div>
   </div>
@@ -140,6 +144,7 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   padding: 40px;
+  color: #666;
 }
 
 .empty-state {
@@ -193,10 +198,35 @@ onMounted(() => {
   color: #666;
 }
 
+.session-preview {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.session-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.message-count {
+  font-size: 12px;
+  color: #007acc;
+  font-weight: 500;
+}
+
 .session-id {
   font-size: 12px;
   color: #999;
   font-family: monospace;
-  word-break: break-all;
 }
 </style>

@@ -34,11 +34,23 @@ export async function scanSessions(): Promise<SessionListItem[]> {
   for (const filePath of files) {
     const meta = parseSessionFilename(filePath);
     if (meta) {
-      sessions.push({
-        ...meta,
-        messageCount: 0,
-        preview: '',
-      });
+      try {
+        const content = await fs.readFile(filePath);
+        const messages = parseJsonlFile(content);
+        const preview = extractPreview(messages);
+
+        sessions.push({
+          ...meta,
+          messageCount: messages.length,
+          preview,
+        });
+      } catch {
+        sessions.push({
+          ...meta,
+          messageCount: 0,
+          preview: '（加载失败）',
+        });
+      }
     }
   }
 

@@ -2,6 +2,18 @@ import type { SessionMeta, CodexMessage } from '../types/session';
 
 const SESSION_REGEX = /^rollout-(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})-([a-f0-9-]+)\.jsonl$/i;
 
+interface JsonlLine {
+  type?: string;
+  payload?: {
+    type?: string;
+    role?: string;
+    message?: string;
+    content?: Array<{ text?: string; type?: string }>;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 export function parseSessionFilename(filePath: string): SessionMeta | null {
   const filename = filePath.split(/[/\\]/).pop() || '';
   const match = filename.match(SESSION_REGEX);
@@ -36,8 +48,9 @@ export function parseJsonlFile(content: string): CodexMessage[] {
     }
 
     try {
-      const message = JSON.parse(trimmed) as CodexMessage;
-      if (message.role && message.content !== undefined) {
+      const data = JSON.parse(trimmed) as JsonlLine;
+      const message = extractMessage(data);
+      if (message) {
         messages.push(message);
       }
     } catch {
@@ -48,17 +61,114 @@ export function parseJsonlFile(content: string): CodexMessage[] {
   return messages;
 }
 
-export function extractPreview(messages: CodexMessage[]): string {
-  const userMessage = messages.find((m) => m.role === 'user');
-  if (userMessage) {
-    const content = userMessage.content;
-    return content.length > 100 ? content.substring(0, 100) + '...' : content;
+function extractMessage(data: JsonlLine): CodexMessage | null {
+  const { type, payload } = data;
+
+  if (!payload) {
+    return null;
   }
 
-  const assistantMessage = messages.find((m) => m.role === 'assistant');
-  if (assistantMessage) {
-    const content = assistantMessage.content;
-    return content.length > 100 ? content.substring(0, 100) + '...' : content;
+  if (type === 'event_msg') {
+    if (payload.type === 'user_message') {
+      const content = payload.message || '';
+      if (isValidUserMessage(content)) {
+        return {
+          role: 'user',
+          content,
+        };
+      }
+    }
+    if (payload.type === 'agent_message') {
+      const content = payload.message || '';
+      if (content.trim()) {
+        return {
+          role: 'assistant',
+          content,
+        };
+      }
+    }
+  }
+
+  if (type === 'response_item') {
+    if (payload.role === 'user' && payload.content) {
+      const text = extractTextFromContent(payload.content);
+      if (isValidUserMessage(text)) {
+        return {
+          role: 'user',
+          content: text,
+        };
+      }
+    }
+    if (payload.role === 'assistant' && payload.content) {
+      const text = extractTextFromContent(payload.content);
+      if (text.trim()) {
+        return {
+          role: 'assistant',
+          content: text,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+function extractTextFromContent(content: Array<{ text?: string; type?: string }>): string {
+  const texts: string[] = [];
+  for (const item of content) {
+    if (item.text) {
+      texts.push(item.text);
+    }
+  }
+  return texts.join('\n');
+}
+
+function isValidUserMessage(content: string): boolean {
+  if (!content || !content.trim()) {
+    return false;
+  }
+
+  const trimmed = content.trim();
+
+  if (trimmed.startsWith('<environment_context>')) {
+    return false;
+  }
+
+  if (trimmed.startsWith('<permissions instructions>')) {
+    return false;
+  }
+
+  if (trimmed.startsWith('<agent_info>')) {
+    return false;
+  }
+
+  if (trimmed.startsWith('{"timestamp":')) {
+    return false;
+  }
+
+  if (trimmed.length < 3) {
+    return false;
+  }
+
+  return true;
+}
+
+export function extractPreview(messages: CodexMessage[]): string {
+  const userMessages = messages.filter((m) => m.role === 'user');
+  
+  for (const msg of userMessages) {
+    const content = msg.content.trim();
+    if (content && content.length > 0) {
+      return content.length > 100 ? content.substring(0, 100) + '...' : content;
+    }
+  }
+
+  const assistantMessages = messages.filter((m) => m.role === 'assistant');
+  for (const msg of assistantMessages) {
+    const content = msg.content.trim();
+    if (content && content.length > 0) {
+      return content.length > 100 ? content.substring(0, 100) + '...' : content;
+    }
   }
 
   return '（空会话）';
@@ -80,9 +190,8 @@ export function messagesToMarkdown(
   for (const msg of messages) {
     const roleLabel =
       msg.role === 'user' ? '👤 用户' : msg.role === 'assistant' ? '🤖 助手' : '⚙️ 系统';
-    const timestamp = msg.timestamp ? `(${msg.timestamp})` : '';
 
-    lines.push(`## ${roleLabel} ${timestamp}`);
+    lines.push(`## ${roleLabel}`);
     lines.push('');
     lines.push(msg.content);
     lines.push('');
