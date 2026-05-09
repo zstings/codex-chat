@@ -8,9 +8,7 @@
         class="search-input"
         @input="handleSearch"
       />
-      <button @click="refreshSessions" class="refresh-btn">
-        🔄 刷新
-      </button>
+      <button @click="refreshSessions" class="refresh-btn">🔄 刷新</button>
     </header>
 
     <div v-if="loading" class="loading-container">
@@ -44,19 +42,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { scanSessions, filterSessions } from '../api/sessions';
-import type { SessionListItem, FilterOptions } from '../types/session';
-import LoadingSpinner from './LoadingSpinner.vue';
+import { ref, onMounted } from "vue";
+import { scanSessions, filterSessions } from "../api/sessions";
+import type { SessionListItem, FilterOptions } from "../types/session";
+import LoadingSpinner from "./LoadingSpinner.vue";
 
 const emit = defineEmits<{
-  (e: 'select', session: SessionListItem): void;
+  (e: "select", session: SessionListItem): void;
 }>();
 
 const sessions = ref<SessionListItem[]>([]);
 const filteredSessions = ref<SessionListItem[]>([]);
 const loading = ref(true);
-const searchKeyword = ref('');
+const searchKeyword = ref("");
 
 async function refreshSessions() {
   loading.value = true;
@@ -64,7 +62,7 @@ async function refreshSessions() {
     sessions.value = await scanSessions();
     applyFilter();
   } catch (error) {
-    console.error('扫描会话失败:', error);
+    console.error("扫描会话失败:", error);
   } finally {
     loading.value = false;
   }
@@ -82,7 +80,7 @@ function applyFilter() {
 }
 
 function selectSession(session: SessionListItem) {
-  emit('select', session);
+  emit("select", session);
 }
 
 onMounted(() => {
@@ -207,7 +205,7 @@ onMounted(() => {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  word-break: break-word;
+  word-break: break-all;
 }
 
 .session-footer {

@@ -23,21 +23,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import SessionList from './components/SessionList.vue';
-import SessionDetail from './components/SessionDetail.vue';
-import type { SessionListItem, Session } from './types/session';
-import { loadSession } from './api/sessions';
+import { ref } from "vue";
+import SessionList from "./components/SessionList.vue";
+import SessionDetail from "./components/SessionDetail.vue";
+import type { SessionListItem, Session } from "./types/session";
+import { loadSession } from "./api/sessions";
 
 const selectedSession = ref<Session | null>(null);
 
 async function handleSessionSelect(sessionItem: SessionListItem) {
   const session = await loadSession(sessionItem.fullPath);
+  console.log("加载会话:", session);
   selectedSession.value = session;
 }
 
 function handleSessionDeleted(sessionId: string) {
-  console.log('会话已删除:', sessionId);
+  console.log("会话已删除:", sessionId);
   selectedSession.value = null;
 }
 
@@ -53,15 +54,17 @@ function handleCloseDetail() {
   box-sizing: border-box;
 }
 
-html, body, #app {
+html,
+body,
+#app {
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .app {

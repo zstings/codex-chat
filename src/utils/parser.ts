@@ -1,6 +1,7 @@
-import type { SessionMeta, CodexMessage } from '../types/session';
+import type { SessionMeta, CodexMessage } from "../types/session";
 
-const SESSION_REGEX = /^rollout-(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})-([a-f0-9-]+)\.jsonl$/i;
+const SESSION_REGEX =
+  /^rollout-(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})-([a-f0-9-]+)\.jsonl$/i;
 
 interface JsonlLine {
   type?: string;
@@ -15,7 +16,7 @@ interface JsonlLine {
 }
 
 export function parseSessionFilename(filePath: string): SessionMeta | null {
-  const filename = filePath.split(/[/\\]/).pop() || '';
+  const filename = filePath.split(/[/\\]/).pop() || "";
   const match = filename.match(SESSION_REGEX);
 
   if (!match) {
@@ -39,7 +40,7 @@ export function parseSessionFilename(filePath: string): SessionMeta | null {
 
 export function parseJsonlFile(content: string): CodexMessage[] {
   const messages: CodexMessage[] = [];
-  const lines = content.split('\n');
+  const lines = content.split("\n");
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -54,7 +55,7 @@ export function parseJsonlFile(content: string): CodexMessage[] {
         messages.push(message);
       }
     } catch {
-      console.warn('JSON 解析失败:', trimmed.substring(0, 50));
+      console.warn("JSON 解析失败:", trimmed.substring(0, 50));
     }
   }
 
@@ -68,43 +69,26 @@ function extractMessage(data: JsonlLine): CodexMessage | null {
     return null;
   }
 
-  if (type === 'event_msg') {
-    if (payload.type === 'user_message') {
-      const content = payload.message || '';
-      if (isValidUserMessage(content)) {
+  if (type === "event_msg") {
+    if (payload.type === "user_message") {
+      const content = payload.message || "";
+      if (isValidMessage(content, "user")) {
         return {
-          role: 'user',
-          content,
-        };
-      }
-    }
-    if (payload.type === 'agent_message') {
-      const content = payload.message || '';
-      if (content.trim()) {
-        return {
-          role: 'assistant',
-          content,
+          role: "user",
+          content: content.trim().replace(/^[\s\S]*?request for Codex:\s*/, ""),
         };
       }
     }
   }
 
-  if (type === 'response_item') {
-    if (payload.role === 'user' && payload.content) {
+  if (type === "response_item") {
+    if (payload.role === "assistant" && payload.content) {
       const text = extractTextFromContent(payload.content);
-      if (isValidUserMessage(text)) {
+      if (isValidMessage(text, "assistant")) {
         return {
-          role: 'user',
-          content: text,
-        };
-      }
-    }
-    if (payload.role === 'assistant' && payload.content) {
-      const text = extractTextFromContent(payload.content);
-      if (text.trim()) {
-        return {
-          role: 'assistant',
-          content: text,
+          role: "assistant",
+          content: text.trim(),
+          phase: payload.phase || "",
         };
       }
     }
@@ -120,84 +104,85 @@ function extractTextFromContent(content: Array<{ text?: string; type?: string }>
       texts.push(item.text);
     }
   }
-  return texts.join('\n');
+  return texts.join("\n");
 }
 
-function isValidUserMessage(content: string): boolean {
+function isValidMessage(content: string, role: "user" | "assistant"): boolean {
   if (!content || !content.trim()) {
     return false;
   }
 
   const trimmed = content.trim();
 
-  if (trimmed.startsWith('<environment_context>')) {
+  if (trimmed.length < 2) {
     return false;
   }
 
-  if (trimmed.startsWith('<permissions instructions>')) {
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     return false;
   }
 
-  if (trimmed.startsWith('<agent_info>')) {
+  if (trimmed.startsWith("<")) {
     return false;
   }
 
-  if (trimmed.startsWith('{"timestamp":')) {
-    return false;
-  }
-
-  if (trimmed.length < 3) {
-    return false;
+  if (role === "user") {
+    if (
+      trimmed.includes("You are Codex") ||
+      trimmed.includes("You are Claude") ||
+      trimmed.includes("Personality") ||
+      trimmed.includes("Filesystem sandboxing")
+    ) {
+      return false;
+    }
   }
 
   return true;
 }
 
 export function extractPreview(messages: CodexMessage[]): string {
-  const userMessages = messages.filter((m) => m.role === 'user');
-  
-  for (const msg of userMessages) {
-    const content = msg.content.trim();
-    if (content && content.length > 0) {
-      return content.length > 100 ? content.substring(0, 100) + '...' : content;
+  for (const msg of messages) {
+    if (msg.role === "user") {
+      const content = msg.content.trim();
+      if (content && content.length > 3) {
+        return content.length > 100 ? content.substring(0, 100) + "..." : content;
+      }
     }
   }
 
-  const assistantMessages = messages.filter((m) => m.role === 'assistant');
-  for (const msg of assistantMessages) {
-    const content = msg.content.trim();
-    if (content && content.length > 0) {
-      return content.length > 100 ? content.substring(0, 100) + '...' : content;
+  for (const msg of messages) {
+    if (msg.role === "assistant") {
+      const content = msg.content.trim();
+      if (content && content.length > 3) {
+        return content.length > 100 ? content.substring(0, 100) + "..." : content;
+      }
     }
   }
 
-  return '（空会话）';
+  return "（空会话）";
 }
 
-export function messagesToMarkdown(
-  messages: CodexMessage[],
-  sessionInfo: SessionMeta
-): string {
+export function messagesToMarkdown(messages: CodexMessage[], sessionInfo: SessionMeta): string {
   const lines: string[] = [];
 
   lines.push(`# Codex 会话`);
   lines.push(`- **会话 ID**: ${sessionInfo.sessionId}`);
   lines.push(`- **创建时间**: ${sessionInfo.dateTime}`);
-  lines.push('');
-  lines.push('---');
-  lines.push('');
+  lines.push("");
+  lines.push("---");
+  lines.push("");
 
   for (const msg of messages) {
     const roleLabel =
-      msg.role === 'user' ? '👤 用户' : msg.role === 'assistant' ? '🤖 助手' : '⚙️ 系统';
+      msg.role === "user" ? "👤 用户" : msg.role === "assistant" ? "🤖 助手" : "⚙️ 系统";
 
     lines.push(`## ${roleLabel}`);
-    lines.push('');
+    lines.push("");
     lines.push(msg.content);
-    lines.push('');
-    lines.push('---');
-    lines.push('');
+    lines.push("");
+    lines.push("---");
+    lines.push("");
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }

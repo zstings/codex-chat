@@ -11,10 +11,11 @@ export interface SessionMeta {
 }
 
 export interface CodexMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
   timestamp?: string;
   metadata?: Record<string, any>;
+  phase?: string;
 }
 
 export interface Session extends SessionMeta {
@@ -38,6 +39,6 @@ export interface FilterOptions {
   keyword?: string;
   startDate?: string;
   endDate?: string;
-  sortBy?: 'date' | 'time' | 'size';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "date" | "time" | "size";
+  sortOrder?: "asc" | "desc";
 }
